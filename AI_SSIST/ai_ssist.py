@@ -5,7 +5,6 @@ import webbrowser
 import time
 import os
 
-# === Initialize TTS ===
 engine = pyttsx3.init()
 engine.setProperty('rate', 150)
 
@@ -14,12 +13,10 @@ def speak(text):
     engine.say(text)
     engine.runAndWait()
 
-# === Mediapipe Setup ===
 mp_hands = mp.solutions.hands
 hands = mp_hands.Hands(min_detection_confidence=0.7, max_num_hands=1)
 mp_draw = mp.solutions.drawing_utils
 
-# === Camera Setup ===
 cap = cv2.VideoCapture(0)
 cap.set(3, 640)
 cap.set(4, 480)
@@ -30,21 +27,16 @@ gesture_start_time = None
 
 def get_finger_count(hand_landmarks):
     fingers = []
-
-    # Thumb (x comparison)
     if hand_landmarks.landmark[4].x > hand_landmarks.landmark[3].x:
         fingers.append(1)
     else:
         fingers.append(0)
-
-    # Other fingers (y comparison)
     tips = [8, 12, 16, 20]
     for tip in tips:
         if hand_landmarks.landmark[tip].y < hand_landmarks.landmark[tip - 2].y:
             fingers.append(1)
         else:
             fingers.append(0)
-
     return sum(fingers)
 
 while True:
@@ -62,11 +54,9 @@ while True:
             finger_count = get_finger_count(hand_landmarks)
 
     if finger_count is not None:
-        # Show finger count
         cv2.putText(img, f"Fingers: {finger_count}", (10, 50),
                     cv2.FONT_HERSHEY_SIMPLEX, 1.2, (139, 0, 139), 3)
 
-        # Show operation text
         action_text = {
             0: "Exiting...",
             1: "Reading data.txt",
@@ -75,9 +65,10 @@ while True:
             4: "Opening News",
             5: "Playing Music"
         }
+
         if finger_count in action_text:
             cv2.putText(img, action_text[finger_count], (10, 100),
-                        cv2.FONT_HERSHEY_SIMPLEX, 1, (0, 128, 255), 2)
+                        cv2.FONT_HERSHEY_SIMPLEX, 1, (139, 0, 0), 2)
 
         if finger_count != prev_count:
             gesture_start_time = time.time()
@@ -86,35 +77,28 @@ while True:
             if finger_count == 0:
                 speak("Goodbye! Closing assistant.")
                 break
-
             elif finger_count == 1:
                 if os.path.exists("data.txt"):
                     with open("data.txt", "r") as f:
-                        text = f.read()
-                        speak(text)
+                        speak(f.read())
                 else:
                     speak("Data file not found.")
-
             elif finger_count == 2:
                 speak("Opening YouTube")
                 webbrowser.open("https://www.youtube.com")
-
             elif finger_count == 3:
                 speak("Opening Gmail")
                 webbrowser.open("https://mail.google.com")
-
             elif finger_count == 4:
                 speak("Opening news website")
                 webbrowser.open("https://news.google.com")
-
             elif finger_count == 5:
                 if os.path.exists("music.mp3"):
                     speak("Playing music now.")
                     os.startfile("music.mp3")
                 else:
                     speak("Music file not found.")
-
-            gesture_start_time = time.time() + 1  # Reset timer
+            gesture_start_time = time.time() + 1
 
     cv2.imshow("AI SSIST – Gesture Assistant", img)
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -122,7 +106,6 @@ while True:
 
 cap.release()
 cv2.destroyAllWindows()
-
 
 
 
